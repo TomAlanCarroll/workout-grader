@@ -9,8 +9,14 @@ trainingFile <- paste(trainingDataDir, "training.csv", sep = "/")
 testingFile <- paste(trainingDataDir, "testing.csv", sep = "/")
 trainingFileUrl <- args[1]
 testingFileUrl <- args[2]
+# Number of columns expected in the CSV file
 numColumns <- 160
+
+# Cross validation ratio for training data
 trainTestRatio <- 0.75
+
+# Column to start training/testing. By default this skips columns 1..7
+startColumn <- 8
 
 if(length(args) < 2) {
 	stop("Please supply training CSV URL as first command argument & testing CSV as second command argument.")
@@ -36,10 +42,16 @@ if (dim(read.csv(trainingFile))[2] != numColumns || dim(read.csv(testingFile))[2
 
 # Load the files
 trainingRaw <- read.csv(trainingFile, na.strings = c("NA", ""))
+testingRaw <- read.csv(testingFile, na.strings = c("NA", ""))
 
 # Remove empty columns
 trainingEmpty <- apply(trainingRaw, 2, function(x) { sum(is.na(x)) })
 trainingProcessed <- trainingRaw[,which(trainingEmpty == 0)]
+trainingProcessed <- trainingProcessed[startColumn:length(trainingProcessed)]
+
+testingEmpty <- apply(testingRaw, 2, function(x) { sum(is.na(x)) })
+testingProcessed <- testingRaw[,which(testingEmpty == 0)]
+testingProcessed <- testingProcessed[startColumn:length(testingProcessed)]
 
 # Partition training set
 trainingPartition <- createDataPartition(y = trainingProcessed$classe, p = trainTestRatio, list = FALSE)
@@ -49,8 +61,9 @@ testing <- trainingProcessed[-trainingPartition,]
 # Train the model with randomForest, y = classe
 model <- randomForest(classe ~ ., data = training)
 
-# Time to test...
+# Time for cross validation...
 prediction <- predict(model, testing)
 confMatrix <- confusionMatrix(testing$classe, prediction)
-
 print(confMatrix)
+
+# Time to test
