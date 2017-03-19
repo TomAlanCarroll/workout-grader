@@ -1,5 +1,6 @@
 library(caret)
 library(randomForest)
+library(corrplot)
 
 args <- commandArgs(TRUE)
 
@@ -36,7 +37,14 @@ if (dim(read.csv(trainingFile))[2] != numColumns || dim(read.csv(testingFile))[2
 # Load the files
 trainingRaw <- read.csv(trainingFile, na.strings = c("NA", ""))
 
-trainingPartition <- createDataPartition(y = trainingRaw$classe, p = trainTestRatio, list = FALSE)
-training <- trainingRaw[trainingPartition,]
-testing <- trainingRaw[-trainingPartition,]
+# Remove empty columns
+trainingEmpty <- apply(trainingRaw, 2, function(x) { sum(is.na(x)) })
+trainingProcessed <- trainingRaw[,which(trainingEmpty == 0)]
 
+# Partition training set
+trainingPartition <- createDataPartition(y = trainingProcessed$classe, p = trainTestRatio, list = FALSE)
+training <- trainingProcessed[trainingPartition,]
+testing <- trainingProcessed[-trainingPartition,]
+
+# Train the model with randomForest, y = classe
+model <- randomForest(classe ~ ., data = training)
