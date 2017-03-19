@@ -48,3 +48,9 @@ testing <- trainingProcessed[-trainingPartition,]
 
 # Train the model with randomForest, y = classe
 model <- randomForest(classe ~ ., data = training)
+
+# Time to test...
+prediction <- predict(model, testing)
+confMatrix <- confusionMatrix(testing$classe, prediction)
+
+print(confMatrix)
