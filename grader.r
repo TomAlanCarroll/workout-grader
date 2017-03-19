@@ -8,6 +8,7 @@ trainingFile <- paste(trainingDataDir, "training.csv", sep="/")
 testingFile <- paste(trainingDataDir, "testing.csv", sep="/")
 trainingFileUrl <- args[1]
 testingFileUrl <- args[2]
+numColumns <- 160
 
 if(length(args) < 2) {
 	stop("Please supply training CSV URL as first command argument & testing CSV as second command argument.")
@@ -26,3 +27,10 @@ if (!file.exists(trainingFile) || !file.exists(testingFile)) {
 	download.file(trainingFileUrl, destfile=trainingFile)
 	download.file(testingFileUrl, destfile=testingFile)
 }
+
+if (dim(read.csv(trainingFile))[2] != numColumns || dim(read.csv(testingFile))[2] != numColumns) {
+	stop(paste(numColumns, " columns must be present in training and testing CSV"))
+}
+
+# Load the files. Skip the first 7 columns (not sensor/class data)
+training <- read.csv(trainingFile, na.strings = c("NA", ""), colClasses=c("NULL","NULL","NULL","NULL","NULL","NULL","NULL",NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA,NA))
