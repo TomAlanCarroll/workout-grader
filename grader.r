@@ -62,8 +62,16 @@ testing <- trainingProcessed[-trainingPartition,]
 model <- randomForest(classe ~ ., data = training)
 
 # Time for cross validation...
-prediction <- predict(model, testing)
-confMatrix <- confusionMatrix(testing$classe, prediction)
+crossValidationPrediction <- predict(model, testing)
+confMatrix <- confusionMatrix(testing$classe, crossValidationPrediction)
+print(paste("======== START CROSS VALIDATION ACCURACY ========"))
 print(confMatrix)
+print(paste("========  END CROSS VALIDATION ACCURACY  ========"))
 
 # Time to test
+prediction <- predict(model, testingProcessed)
+
+# Output results
+print(paste("========           PREDICTIONS           ========"))
+prediction
+print(paste("========           PREDICTIONS           ========"))
