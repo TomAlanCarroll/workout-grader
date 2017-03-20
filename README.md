@@ -12,6 +12,11 @@ More information around the training set can be found here:
 ## Model Algorithm
 The model for this project was built using R's `randomForest` package. I made the decision to use Random Forests because they are flexible and quick to train. The model is built by:
 ```r
+# Partition training set
+trainingPartition <- createDataPartition(y = trainingProcessed$classe, p = trainTestRatio, list = FALSE)
+training <- trainingProcessed[trainingPartition,]
+testing <- trainingProcessed[-trainingPartition,]
+
 # Train the model with randomForest, y = classe
 model <- randomForest(classe ~ ., data = training)
 ```
@@ -23,7 +28,7 @@ crossValidationPrediction <- predict(model, testing)
 confMatrix <- confusionMatrix(testing$classe, crossValidationPrediction)
 ```
 
-In a few measurements, the cross validation accuracy was very high (99.5 - 100%), so the model was ready for testing. I did not expect a high out-of-sample error because the collection of the training data was in a highly regulated environment, with the participants being instructed on how to perform the exercises. In the future, additional training environments would need better modeling strategies.
+I estimated a very low out of sample rate of <1% because the collection of the training data was in a highly regulated environment, with the participants being instructed on how to perform the exercises. In the future, additional training environments would need better modeling strategies. In a few measurements, the cross validation accuracy was very high (99.5 - 100%), so the model was ready for testing. After running cross validation, the out of sample rate was approximately 0.5%.
 
 ## Predictions
 The trained model is used to predict the quality of the workout form, either **A** or  *B to E*. This is predicted by:

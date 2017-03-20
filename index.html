@@ -1,99 +1,47 @@
 <!DOCTYPE html>
 <html>
-
   <head>
-    <meta charset='utf-8'>
-    <meta http-equiv="X-UA-Compatible" content="chrome=1">
-    <meta name="description" content="workout-grader : Grades workout using orientation sensors">
-
-    <link rel="stylesheet" type="text/css" media="screen" href="/workout-grader/assets/css/style.css?v=682b3e31124353785cd0c9074baaf1a3f6b1282e">
-
     <title>workout-grader</title>
   </head>
-
   <body>
+    <h3 id="workout-grader">Workout Grader</h3>
+    <p>Given the recent advances in wearable technologies, there exists a new opportunity to monitor and give feedback to athletes needing optimized training sessions. These new wave of devices provide the possibility to give personalized feedback during and after the athlete's workout. Most people are interested in how <em>much</em> of a particular activity they do, but athlete's care more about <em>how well they do it</em> for optimal training. In this project, the data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants is used to grade the quality of the workout form. The participants were asked to perform barbell lifts correctly and incorrectly in 5 different ways. These are broken down into 5 classes, with <strong>A</strong> being ideal:</p>
+    <ul>
+    <li><strong>A</strong> = Exactly according to the specification</li>
+    <li><em>B</em> = Throwing the elbows to the front</li>
+    <li><em>C</em> = Lifting the dumbbell only halfway</li>
+    <li><em>D</em> = Lowering the dumbbell only halfway</li>
+    <li><em>E</em> = Throwing the hips to the front</li>
+    </ul>
+    <p>More information around the training set can be found here:
+    <a href="http://groupware.les.inf.puc-rio.br/har#related_papers">http://groupware.les.inf.puc-rio.br/har</a>.</p>
+    <h4 id="model-algorithm">Model Algorithm</h4>
+    <p>The model for this project was built using R's <code>randomForest</code> package. I made the decision to use Random Forests because they are flexible and quick to train. The model is built by:</p>
+    <pre><code class="r language-r"># Partition training set
+    trainingPartition &lt;- createDataPartition(y = trainingProcessed$classe, p = trainTestRatio, list = FALSE)
+    training &lt;- trainingProcessed[trainingPartition,]
+    testing &lt;- trainingProcessed[-trainingPartition,]
 
-    <!-- HEADER -->
-    <div id="header_wrap" class="outer">
-        <header class="inner">
-          <a id="forkme_banner" href="https://github.com/TomAlanCarroll/workout-grader">View on GitHub</a>
+    # Train the model with randomForest, y = classe
+    model &lt;- randomForest(classe ~ ., data = training)</code></pre>
+    <h4 id="cross-validation">Cross Validation</h4>
+    <p>A cross validation strategy is used to estimate how accurately the predictive model will perform with live data. 75% of the training data is partitioned to train the model, with the remaining 25% used to estimate the efficacy. This is validated by:</p>
+    <pre><code class="r language-r">crossValidationPrediction &lt;- predict(model, testing)
+    confMatrix &lt;- confusionMatrix(testing$classe, crossValidationPrediction)</code></pre>
+    <p>I estimated a very low out of sample rate of &lt;1% because the collection of the training data was in a highly regulated environment, with the participants being instructed on how to perform the exercises. In the future, additional training environments would need better modeling strategies. In a few measurements, the cross validation accuracy was very high (99.5 - 100%), so the model was ready for testing. After running cross validation, the out of sample rate was approximately 0.5%.</p>
+    <h4 id="predictions">Predictions</h4>
+    <p>The trained model is used to predict the quality of the workout form, either <strong>A</strong> or  <em>B to E</em>. This is predicted by:</p>
+    <pre><code class="r language-r">prediction &lt;- predict(model, testingProcessed)</code></pre>
+    <p>From this the athlete can determine workout deficiencies and work to perfect defects in the future.</p>
+    <h4 id="running-workout-grader">Running workout-grader</h4>
+    <h5 id="r-packages">R packages</h5>
+    <pre><code class="r language-r">install.packages("caret")
+    install.packages("randomForest")
+    install.packages("corrplot")</code></pre>
+    <h5 id="how-to-execute">How to execute</h5>
+    <pre><code class="bash language-bash">Rscript grader.r [training-CSV-URL] [testing-CSV-URL]
 
-          <h1 id="project_title">workout-grader</h1>
-          <h2 id="project_tagline">Grades workout using orientation sensors</h2>
-
-          
-        </header>
-    </div>
-
-    <!-- MAIN CONTENT -->
-    <div id="main_content_wrap" class="outer">
-      <section id="main_content" class="inner">
-        <h1 id="workout-grader">Workout Grader</h1>
-<p>Given the recent advances in wearable technologies, there exists a new opportunity to monitor and give feedback to athletes needing optimized training sessions. These new wave of devices provide the possibility to give personalized feedback during and after the athlete’s workout. Most people are interested in how <em>much</em> of a particular activity they do, but athlete’s care more about <em>how well they do it</em> for optimal training. In this project, the data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants is used to grade the quality of the workout form. The participants were asked to perform barbell lifts correctly and incorrectly in 5 different ways. These are broken down into 5 classes, with <strong>A</strong> being ideal:</p>
-<ul>
-  <li><strong>A</strong> = Exactly according to the specification</li>
-  <li><em>B</em> = Throwing the elbows to the front</li>
-  <li><em>C</em> = Lifting the dumbbell only halfway</li>
-  <li><em>D</em> = Lowering the dumbbell only halfway</li>
-  <li><em>E</em> = Throwing the hips to the front</li>
-</ul>
-
-<p>More information around the training set can be found here:
-<a href="http://groupware.les.inf.puc-rio.br/har#related_papers">http://groupware.les.inf.puc-rio.br/har</a>.</p>
-
-<h2 id="model-algorithm">Model Algorithm</h2>
-<p>The model for this project was built using R’s <code class="highlighter-rouge">randomForest</code> package. I made the decision to use Random Forests because they are flexible and quick to train. The model is built by:</p>
-<div class="language-r highlighter-rouge"><pre class="highlight"><code><span class="c1"># Train the model with randomForest, y = classe
-</span><span class="n">model</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">randomForest</span><span class="p">(</span><span class="n">classe</span><span class="w"> </span><span class="o">~</span><span class="w"> </span><span class="n">.</span><span class="p">,</span><span class="w"> </span><span class="n">data</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">training</span><span class="p">)</span><span class="w">
-</span></code></pre>
-</div>
-
-<h2 id="cross-validation">Cross Validation</h2>
-<p>A cross validation strategy is used to estimate how accurately the predictive model will perform with live data. 75% of the training data is partitioned to train the model, with the remaining 25% used to estimate the efficacy. This is validated by:</p>
-<div class="language-r highlighter-rouge"><pre class="highlight"><code><span class="n">crossValidationPrediction</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">predict</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="w"> </span><span class="n">testing</span><span class="p">)</span><span class="w">
-</span><span class="n">confMatrix</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">confusionMatrix</span><span class="p">(</span><span class="n">testing</span><span class="o">$</span><span class="n">classe</span><span class="p">,</span><span class="w"> </span><span class="n">crossValidationPrediction</span><span class="p">)</span><span class="w">
-</span></code></pre>
-</div>
-
-<p>In a few measurements, the cross validation accuracy was very high (99.5 - 100%), so the model was ready for testing. I did not expect a high out-of-sample error because the collection of the training data was in a highly regulated environment, with the participants being instructed on how to perform the exercises. In the future, additional training environments would need better modeling strategies.</p>
-
-<h2 id="predictions">Predictions</h2>
-<p>The trained model is used to predict the quality of the workout form, either <strong>A</strong> or  <em>B to E</em>. This is predicted by:</p>
-<div class="language-r highlighter-rouge"><pre class="highlight"><code><span class="n">prediction</span><span class="w"> </span><span class="o">&lt;-</span><span class="w"> </span><span class="n">predict</span><span class="p">(</span><span class="n">model</span><span class="p">,</span><span class="w"> </span><span class="n">testingProcessed</span><span class="p">)</span><span class="w">
-</span></code></pre>
-</div>
-
-<p>From this the athlete can determine workout deficiencies and work to perfect defects in the future.</p>
-
-<h2 id="running-workout-grader">Running workout-grader</h2>
-<h3 id="r-packages">R packages</h3>
-<div class="language-r highlighter-rouge"><pre class="highlight"><code><span class="n">install.packages</span><span class="p">(</span><span class="s2">"caret"</span><span class="p">)</span><span class="w">
-</span><span class="n">install.packages</span><span class="p">(</span><span class="s2">"randomForest"</span><span class="p">)</span><span class="w">
-</span><span class="n">install.packages</span><span class="p">(</span><span class="s2">"corrplot"</span><span class="p">)</span><span class="w">
-</span></code></pre>
-</div>
-<h3 id="how-to-execute">How to execute</h3>
-<div class="language-bash highlighter-rouge"><pre class="highlight"><code>Rscript grader.r <span class="o">[</span>training-CSV-URL] <span class="o">[</span>testing-CSV-URL]
-
-<span class="c"># with example files:</span>
-Rscript grader.r <span class="s2">"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"</span> <span class="s2">"https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"</span>
-</code></pre>
-</div>
-
-      </section>
-    </div>
-
-    <!-- FOOTER  -->
-    <div id="footer_wrap" class="outer">
-      <footer class="inner">
-        
-        <p class="copyright">workout-grader maintained by <a href="https://github.com/TomAlanCarroll">TomAlanCarroll</a></p>
-        
-        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
-      </footer>
-    </div>
-
-
-
+    # with example files:
+    Rscript grader.r "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv" "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"</code></pre>
   </body>
 </html>
