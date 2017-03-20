@@ -1,6 +1,5 @@
 library(caret)
 library(randomForest)
-library(corrplot)
 
 args <- commandArgs(TRUE)
 
@@ -9,6 +8,7 @@ trainingFile <- paste(trainingDataDir, "training.csv", sep = "/")
 testingFile <- paste(trainingDataDir, "testing.csv", sep = "/")
 trainingFileUrl <- args[1]
 testingFileUrl <- args[2]
+
 # Number of columns expected in the CSV file
 numColumns <- 160
 
@@ -72,6 +72,6 @@ print(paste("========  END CROSS VALIDATION ACCURACY  ========"))
 prediction <- predict(model, testingProcessed)
 
 # Output results
-print(paste("========           PREDICTIONS           ========"))
+print(paste("========        START PREDICTIONS        ========"))
 prediction
-print(paste("========           PREDICTIONS           ========"))
+print(paste("========         END PREDICTIONS         ========"))
